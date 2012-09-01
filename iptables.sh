@@ -10,9 +10,9 @@ MKDIR=/bin/mkdir
 MYIP=''
 
 # Server IP
-IP=''
+SERVER_IP=''
 
-if [ "$IP" == "" ]; then
+if [ "$SERVER_IP" == "" ]; then
     echo "Set IP address of server, here is a possible list"
     /sbin/ifconfig |grep -B1 "inet addr" |awk '{ if ( $1 == "inet" ) { print $2 } else if ( $2 == "Link" ) { printf "%s:" ,$1 } }' |awk -F: '{ print $1 ": " $3 }'
     exit
@@ -20,7 +20,7 @@ fi
 
 ZONEROOT="/tmp/iptables"
 DLROOT="http://www.ipdeny.com/ipblocks/data/countries"
-TORURL="https://check.torproject.org/cgi-bin/TorBulkExitList.py?ip=$IP"
+TORURL="https://check.torproject.org/cgi-bin/TorBulkExitList.py?ip=$SERVER_IP"
 
 # Block Tor ?
 BLOCKTOR=1
@@ -32,9 +32,8 @@ ISO="af cn"
 PUB='eth0'
 PRI=''
 
-# Name servers (IP ADDRESS)
-NS1=''
-NS2=''
+# Name servers, delimit each with space (IP ADDRESS)
+NAMESERVERS=''
 
 # Clean old rules
 $IPT -F
@@ -124,6 +123,14 @@ $IPT -A THRU -i $PUB -p tcp -m tcp --dport 80 -j ACCEPT
 $IPT -A THRU -i $PUB -p tcp -m tcp --dport 443 -j ACCEPT
 
 # DNS
+for ip in $DNS_SERVER
+do
+$IPT -A OUTPUT -p udp -s $SERVER_IP --sport 1024:65535 -d $ip --dport 53 -m state --state NEW,ESTABLISHED -j ACCEPT
+$IPT -A INPUT -p udp -s $ip --sport 53 -d $SERVER_IP --dport 1024:65535 -m state --state ESTABLISHED -j ACCEPT
+$IPT -A OUTPUT -p tcp -s $SERVER_IP --sport 1024:65535 -d $ip --dport 53 -m state --state NEW,ESTABLISHED -j ACCEPT
+$IPT -A INPUT -p tcp -s $ip --sport 53 -d $SERVER_IP --dport 1024:65535 -m state --state ESTABLISHED -j ACCEPT
+done
+
 if [ "$NS1" -ne "" ]; then
     $IPT -A THRU -p udp -s $NS1/32 --source-port 53 -d 0/0 -j ACCEPT
 fi
