@@ -30,7 +30,7 @@ ISO="af cn"
 
 # Ethernet Interfaces, PUB=Public  PRI=Private
 PUB='eth0'
-PRI='eth1'
+PRI=''
 
 # Name servers (IP ADDRESS)
 NS1=''
@@ -68,8 +68,9 @@ $IPT -A INPUT -i $PUB -m state --state RELATED,ESTABLISHED -j ACCEPT
 $IPT -A INPUT -i lo -j ACCEPT
 
 # Accept traffic from $PRI (intranet)
-$IPT -A INPUT -i $PRI -s 0/0 -d 0/0 -j ACCEPT
-
+if [ "$PRI" -ne "" ]; then
+    $IPT -A INPUT -i $PRI -s 0/0 -d 0/0 -j ACCEPT
+fi
 
 # Deny any packet coming in on the public internet interface $PUB
 # which has a spoofed source address from our local networks:
