@@ -123,20 +123,13 @@ $IPT -A THRU -i $PUB -p tcp -m tcp --dport 80 -j ACCEPT
 $IPT -A THRU -i $PUB -p tcp -m tcp --dport 443 -j ACCEPT
 
 # DNS
-for ip in $DNS_SERVER
+for ip in $NAMESERVERS
 do
-$IPT -A OUTPUT -p udp -s $SERVER_IP --sport 1024:65535 -d $ip --dport 53 -m state --state NEW,ESTABLISHED -j ACCEPT
-$IPT -A INPUT -p udp -s $ip --sport 53 -d $SERVER_IP --dport 1024:65535 -m state --state ESTABLISHED -j ACCEPT
-$IPT -A OUTPUT -p tcp -s $SERVER_IP --sport 1024:65535 -d $ip --dport 53 -m state --state NEW,ESTABLISHED -j ACCEPT
-$IPT -A INPUT -p tcp -s $ip --sport 53 -d $SERVER_IP --dport 1024:65535 -m state --state ESTABLISHED -j ACCEPT
+    $IPT -A OUTPUT -p udp -s $SERVER_IP --sport 1024:65535 -d $ip --dport 53 -m state --state NEW,ESTABLISHED -j ACCEPT
+    $IPT -A INPUT -p udp -s $ip --sport 53 -d $SERVER_IP --dport 1024:65535 -m state --state ESTABLISHED -j ACCEPT
+    $IPT -A OUTPUT -p tcp -s $SERVER_IP --sport 1024:65535 -d $ip --dport 53 -m state --state NEW,ESTABLISHED -j ACCEPT
+    $IPT -A INPUT -p tcp -s $ip --sport 53 -d $SERVER_IP --dport 1024:65535 -m state --state ESTABLISHED -j ACCEPT
 done
-
-if [ "$NS1" -ne "" ]; then
-    $IPT -A THRU -p udp -s $NS1/32 --source-port 53 -d 0/0 -j ACCEPT
-fi
-if [ "$NS2" -ne "" ]; then
-    $IPT -A THRU -p udp -s $NS2/32 --source-port 53 -d 0/0 -j ACCEPT
-fi
 
 # Privoxy
 #$IPT -A THRU -i $PUB -p tcp -m tcp --dport 8118 -j ACCEPT
