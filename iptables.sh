@@ -32,9 +32,6 @@ ISO="af cn"
 PUB='eth0'
 PRI=''
 
-# Name servers, delimit each with space (IP ADDRESS)
-NAMESERVERS=''
-
 # Clean old rules
 $IPT -F
 $IPT -X
@@ -123,13 +120,11 @@ $IPT -A THRU -i $PUB -p tcp -m tcp --dport 80 -j ACCEPT
 $IPT -A THRU -i $PUB -p tcp -m tcp --dport 443 -j ACCEPT
 
 # DNS
-for ip in $NAMESERVERS
-do
-    $IPT -A OUTPUT -p udp -s $SERVER_IP --sport 1024:65535 -d $ip --dport 53 -m state --state NEW,ESTABLISHED -j ACCEPT
-    $IPT -A INPUT -p udp -s $ip --sport 53 -d $SERVER_IP --dport 1024:65535 -m state --state ESTABLISHED -j ACCEPT
-    $IPT -A OUTPUT -p tcp -s $SERVER_IP --sport 1024:65535 -d $ip --dport 53 -m state --state NEW,ESTABLISHED -j ACCEPT
-    $IPT -A INPUT -p tcp -s $ip --sport 53 -d $SERVER_IP --dport 1024:65535 -m state --state ESTABLISHED -j ACCEPT
-done
+UNPRIVPORTS="1024:65535"
+$IPT -A OUTPUT -p udp -s $SERVER_IP --sport $UNPRIVPORTS -d 0/0 --dport 53 -m state --state NEW,ESTABLISHED -j ACCEPT
+$IPT -A INPUT -p udp -s 0/0 --sport 53 -d $SERVER_IP --dport $UNPRIVPORTS -m state --state ESTABLISHED -j ACCEPT
+$IPT -A OUTPUT -p tcp -s $SERVER_IP --sport $UNPRIVPORTS -d 0/0 --dport 53 -m state --state NEW,ESTABLISHED -j ACCEPT
+$IPT -A INPUT -p tcp -s 0/0 --sport 53 -d $SERVER_IP --dport $UNPRIVPORTS -m state --state ESTABLISHED -j ACCEPT
 
 # Privoxy
 #$IPT -A THRU -i $PUB -p tcp -m tcp --dport 8118 -j ACCEPT
