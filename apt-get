@@ -1,3 +1,0 @@
-apt-get update
-apt-get upgrade -f -y --force-yes
-apt-get install -f -y --force-yes python git php5 php-apc php5-apc php5-suhosin
