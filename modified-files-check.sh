@@ -22,7 +22,7 @@ fi
 NEWEST=0
 SEND=0
 
-MODFILES=$(find $WWWDIR -mtime -$DAYSOLD | egrep 'html$|js$|php$')
+MODFILES=$(find $WWWDIR -mtime -$DAYSOLD | egrep 'html$|js$|php$|py$')
 
 for modfile in $MODFILES
 do
