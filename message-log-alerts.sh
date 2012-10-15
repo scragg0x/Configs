@@ -4,7 +4,7 @@ MSGLOG=/var/log/messages
 TMPLOG=/tmp/tmp-message-log-last
 EMAILMSG=/tmp/tmp-email-msg-messages.txt
 TMPFILE=/tmp/tmp-last-alerts.txt
-BLACKLISTFILE=/root/iptables/blacklist.zone
+BLACKLISTFILE=/tmp/iptables/blacklist.zone
 
 EXCEPTIONS="autoc_item.php"
 
