@@ -12,7 +12,7 @@ MYIP=''
 # Server IP
 SERVER_IP=''
 
-if [ "$SERVER_IP" == "" ]; then
+if [ "$SERVER_IP" = "" ]; then
     echo "Set IP address of server, here is a possible list"
     /sbin/ifconfig |grep -B1 "inet addr" |awk '{ if ( $1 == "inet" ) { print $2 } else if ( $2 == "Link" ) { printf "%s:" ,$1 } }' |awk -F: '{ print $1 ": " $3 }'
     exit
@@ -64,7 +64,7 @@ $IPT -A INPUT -i $PUB -m state --state RELATED,ESTABLISHED -j ACCEPT
 $IPT -A INPUT -i lo -j ACCEPT
 
 # Accept traffic from $PRI (intranet)
-if [ "$PRI" -ne "" ]; then
+if [ "$PRI" = "" ]; then
     $IPT -A INPUT -i $PRI -s 0/0 -d 0/0 -j ACCEPT
 fi
 
@@ -107,7 +107,7 @@ do
     $IPT -A WHITELIST -s $ip -j ACCEPT
 done
 
-if [ "$MYIP" -ne "" ]; then
+if [ "$MYIP" = "" ]; then
     $IPT -A WHITELIST -s $MYIP -j ACCEPT
 fi
 # END WHITELIST ##############################################
