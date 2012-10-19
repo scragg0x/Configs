@@ -1,0 +1,46 @@
+set daemon 120            # check services at 2-minute intervals
+set logfile /var/log/monit.log
+set idfile /var/lib/monit/id
+set statefile /var/lib/monit/state
+
+set mailserver localhost
+set eventqueue
+basedir /var/lib/monit/events # set the base directory where events will be stored
+slots 100                     # optionally limit the queue size
+set alert scragg@gmail.com    # receive all alerts
+
+check system localhost
+if memory usage > 85% then alert
+if cpu usage (user) > 80% for 3 cycles then alert
+if cpu usage (system) > 80% for 3 cycles then alert
+
+check filesystem rootfs with path /
+if space usage > 80% then alert
+
+# OVH1
+#check filesystem /dev/md2 with path /home
+#if space usage > 80% then alert
+
+check process nginx with pidfile /var/run/nginx.pid
+    start program = "/etc/init.d/nginx start"
+    stop program  = "/etc/init.d/nginx stop"
+    group www-data
+
+check process mysql with pidfile /var/run/mysqld/mysqld.pid
+    group mysql
+    start program = "/etc/init.d/mysql start"
+    stop program = "/etc/init.d/mysql stop"
+    if cpu > 60% for 2 cycles then alert
+    if failed host 127.0.0.1 port 3306 then restart
+    if 5 restarts within 5 cycles then timeout
+
+check process sshd with pidfile /var/run/sshd.pid
+   start program  "/etc/init.d/sshd start"
+   stop program  "/etc/init.d/sshd stop"
+   if failed port 22 protocol ssh then restart
+   if 5 restarts within 5 cycles then timeout
+
+#check file DbSlaveReplication with path /var/run/monit/watchdog
+#  IF timestamp > 2 minutes then alert
+
+include /etc/monit/conf.d/*
