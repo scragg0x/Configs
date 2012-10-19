@@ -18,7 +18,7 @@ check filesystem rootfs with path /
 if space usage > 80% then alert
 
 # OVH1
-#check filesystem /dev/md2 with path /home
+#check filesystem home with path /home
 #if space usage > 80% then alert
 
 check process nginx with pidfile /var/run/nginx.pid
@@ -35,10 +35,24 @@ check process mysql with pidfile /var/run/mysqld/mysqld.pid
     if 5 restarts within 5 cycles then timeout
 
 check process sshd with pidfile /var/run/sshd.pid
-   start program  "/etc/init.d/sshd start"
-   stop program  "/etc/init.d/sshd stop"
+   start program  "/etc/init.d/ssh start"
+   stop program  "/etc/init.d/ssh stop"
    if failed port 22 protocol ssh then restart
    if 5 restarts within 5 cycles then timeout
+
+check process redis   
+  with pidfile /var/run/redis/redis-6379.pid   
+  start program = "/etc/init.d/redis-server start" 
+  stop program = "/etc/init.d/redis-server stop"  
+  if failed host 127.0.0.1 port 6379 then restart   
+  if 5 restarts within 5 cycles then timeout
+
+#check process redis-6380
+#  with pidfile /var/run/redis/redis-6380.pid
+#  start program = "/etc/init.d/redis-6380 start"
+#  stop program = "/etc/init.d/redis-6380 stop"
+#  if failed host 127.0.0.1 port 6380 then restart
+#  if 5 restarts within 5 cycles then timeout
 
 #check file DbSlaveReplication with path /var/run/monit/watchdog
 #  IF timestamp > 2 minutes then alert
