@@ -21,6 +21,10 @@ if space usage > 80% then alert
 #check filesystem home with path /home
 #if space usage > 80% then alert
 
+# Mon replication
+#check file DbSlaveReplication with path /var/run/monit/watchdog
+#  IF timestamp > 10 minutes then alert
+
 check process nginx with pidfile /var/run/nginx.pid
     start program = "/etc/init.d/nginx start"
     stop program  = "/etc/init.d/nginx stop"
