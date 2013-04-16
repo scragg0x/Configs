@@ -1,0 +1,306 @@
+server {
+	listen 216.144.246.170:80;
+	server_name ffxiah.com;
+	rewrite ^ http://www.ffxiah.com$request_uri? permanent;
+}
+
+server {
+        listen 216.144.246.170:80;
+        server_name ffxivpro.com;
+        rewrite ^ http://www.ffxivpro.com$request_uri? permanent;
+}
+
+server {
+	listen 216.144.246.170:80;
+	
+	access_log /var/log/nginx/ffxiah-access.log;
+
+	root /var/www/ffxipro.com/public;
+	index index.php;
+
+	server_name www.ffxiah.com jp.ffxiah.com de.ffxiah.com fr.ffxiah.com;
+
+	rewrite ^(.*)\.v[0-9]+\.(js|css)$ $1.$2 last;
+	rewrite ^/ffxiahify\.php$ /scripts/ffxiahify.php?$args last;
+	rewrite ^/widget\.php$ /scripts/widget.php?$args last;
+
+	location ~* \.(jpg|jpeg|gif|png|css|js|ico|xml)$ {
+		access_log        off;
+		log_not_found     off;
+		expires           360d;
+	}
+	
+	location / {
+        	# This is cool because no php is touched for static content
+        	try_files $uri $uri/ /index.php?$args;
+      	}
+
+	location ~ /scripts/autoc_item.php$ {
+                try_files $uri /index.php?$args;
+                fastcgi_index   index.php;
+                fastcgi_pass    127.0.0.1:9003;
+                include         fastcgi_params;
+                fastcgi_param   SCRIPT_FILENAME    $document_root$fastcgi_script_name;
+                fastcgi_param   SCRIPT_NAME        $fastcgi_script_name;
+
+                #Caching parameters
+                fastcgi_cache autoc;
+
+                fastcgi_cache_key "$scheme$request_method$host$request_uri";
+
+                fastcgi_cache_valid  200 302 304 2h;
+                fastcgi_cache_valid  301 2h;
+                fastcgi_cache_valid  any 10m;
+		fastcgi_ignore_headers "Cache-Control" "Expires" "Set-Cookie";
+                fastcgi_hide_header "Set-Cookie";
+                fastcgi_cache_use_stale error timeout invalid_header updating http_500;
+                access_log /var/log/nginx/api-access.log cache;
+        }
+	
+	set $nocache "";
+
+        if ($http_cookie ~* "username=[^%]+") {
+                set $nocache "Y";
+        }
+
+        set $server_id "0";
+        if ($http_cookie ~* "sid=([0-9]+)") {
+                set $server_id $1;
+        }
+
+	location ~ \.php$ {
+		try_files $uri /index.php?$args;
+		fastcgi_index	index.php;
+		#fastcgi_pass	unix:/tmp/php5-fpm.sock;
+		fastcgi_pass 127.0.0.1:9000;
+		include		/etc/nginx/fastcgi_params;
+		fastcgi_param   SCRIPT_FILENAME    $document_root$fastcgi_script_name;
+    		fastcgi_param   SCRIPT_NAME        $fastcgi_script_name;
+		fastcgi_param   SERVER_NAME        $server_name;
+		
+		fastcgi_cache ffxiah;
+                fastcgi_cache_key "$scheme$request_method$host$request_uri$server_id";
+
+                fastcgi_cache_valid  200 302 304 3m;
+                fastcgi_cache_valid  301 3m;
+                fastcgi_cache_valid  any 3m;
+                fastcgi_cache_use_stale error timeout invalid_header updating http_500;
+                fastcgi_ignore_headers "Cache-Control" "Expires";
+                add_header X-No-Cache $nocache;
+                fastcgi_cache_bypass $nocache;
+                fastcgi_no_cache $nocache;
+                if ($nocache = ""){
+                        access_log /var/log/nginx/ffxiah-access.log cache;
+                }
+
+	}
+
+	location ~ /\. {
+		deny all;
+	}
+
+	location = /shouts/json {
+		deny all;
+	}
+}
+
+
+server {
+        listen 216.144.246.170:80;
+        server_name www.lastdb.com;
+        rewrite ^ http://lastdb.com$request_uri? permanent;
+}
+
+server {
+        listen 216.144.246.170:80;
+        server_name ffxi.lastdb.com ffxiv.lastdb.com lastdb.com;
+
+        location / {
+            	include uwsgi_params;
+		uwsgi_pass 127.0.0.1:8000;
+        }
+}
+
+server {
+	listen 216.144.246.170:443;
+	ssl on;
+	ssl_certificate /etc/nginx/ssl/ffxiah.com/ffxiah.com.crt;
+	ssl_certificate_key /etc/nginx/ssl/ffxiah.com/ffxiah.com.key;
+
+        root /var/www/ffxipro.com/public;
+        index index.php;
+
+        server_name www.ffxiah.com;
+
+        rewrite ^(.*)\.v[0-9]+\.(js|css)$ $1.$2 last;
+        rewrite ^/ffxiahify\.php$ /scripts/ffxiahify.php?$args last;
+        rewrite ^/widget\.php$ /scripts/widget.php?$args last;
+
+        location ~* \.(jpg|jpeg|gif|png|css|js|ico|xml)$ {
+                access_log        off;
+                log_not_found     off;
+                expires           360d;
+        }
+
+        location / {
+                # This is cool because no php is touched for static content
+                try_files $uri $uri/ /index.php?$args;
+        }
+
+        location ~ \.php$ {
+                try_files $uri /index.php?$args;
+                fastcgi_index   index.php;
+                #fastcgi_pass    unix:/tmp/php5-fpm.sock;
+                fastcgi_pass    127.0.0.1:9000;
+		include         fastcgi_params;
+                fastcgi_param   SCRIPT_FILENAME    $document_root$fastcgi_script_name;
+                fastcgi_param   SCRIPT_NAME        $fastcgi_script_name;
+        }
+
+        location ~ /\. {
+                deny all;
+        }
+
+}
+
+
+server {
+	listen 216.144.246.170:80;
+	server_name static.ffxiah.com;
+	root /var/www/static.ffxiah.com;
+	rewrite ^(.*)\.v[0-9]+\.(js|css)$ $1.$2 last;
+
+	location ~* \.(jpg|jpeg|gif|png|css|js|ico|xml)$ {
+                access_log        off;
+                log_not_found     off;
+                expires           360d;
+        }
+
+	location ~ /\. {
+                deny all;
+        }
+}
+
+server {
+	listen 216.144.246.170:80;
+	server_name api.ffxiah.com api.ffxivpro.com;
+	root /var/www/api.ffxivpro.com/public;
+
+	access_log /var/log/nginx/api-access.log;
+
+	index index.php;
+
+	location ~ /tt/(.+)\.php$ {
+		try_files $uri /index.php?$args;
+                fastcgi_index   index.php;
+                fastcgi_pass    127.0.0.1:9003;
+                include         fastcgi_params;
+                fastcgi_param   SCRIPT_FILENAME    $document_root$fastcgi_script_name;
+                fastcgi_param   SCRIPT_NAME        $fastcgi_script_name;
+		
+		#Caching parameters
+		fastcgi_cache tt2;
+		
+		fastcgi_cache_key "$scheme$request_method$host$request_uri";
+
+		fastcgi_cache_valid  200 302 304 2h;
+		fastcgi_cache_valid  301 2h;
+		fastcgi_cache_valid  any 5m;
+		fastcgi_cache_use_stale error timeout invalid_header updating http_500;
+		fastcgi_ignore_headers "Cache-Control" "Expires" "Set-Cookie";
+		fastcgi_hide_header "Set-Cookie";
+		access_log /var/log/nginx/api-access.log cache;
+	}
+
+
+	location ~ \.php$ {
+                try_files $uri /index.php?$args;
+                fastcgi_index   index.php;
+                fastcgi_pass    127.0.0.1:9003;
+                include         fastcgi_params;
+                fastcgi_param   SCRIPT_FILENAME    $document_root$fastcgi_script_name;
+                fastcgi_param   SCRIPT_NAME        $fastcgi_script_name;
+        }
+
+        location ~ /\. {
+                deny all;
+        }
+
+}
+
+server {
+        listen 216.144.246.170:80;
+
+        root /var/www/ffxivpro.com/public;
+        index index.php;
+
+        server_name www.ffxivpro.com jp.ffxivpro.com de.ffxivpro.com fr.ffxivpro.com;
+
+	rewrite ^(.*)\.v[0-9]+\.(js|css)$ $1.$2 last;
+
+        location ~* \.(jpg|jpeg|gif|png|css|js|ico|xml)$ {
+                access_log        off;
+                log_not_found     off;
+                expires           360d;
+        }
+
+	location / {
+                # This is cool because no php is touched for static content
+                try_files $uri $uri/ /index.php?$args;
+        }
+
+        location ~ \.php$ {
+                try_files       $uri /index.php?$args;
+                fastcgi_index   index.php;
+                fastcgi_pass    127.0.0.1:9000;
+		#fastcgi_pass    unix:/tmp/php5-fpm.sock;
+                include         fastcgi_params;
+                fastcgi_param   SCRIPT_FILENAME    $document_root$fastcgi_script_name;
+                fastcgi_param   SCRIPT_NAME        $fastcgi_script_name;
+        }
+
+        location ~ /\. {
+                deny all;
+        }
+}
+
+server {
+        listen 216.144.246.170:443;
+        ssl on;
+        ssl_certificate /etc/nginx/ssl/ffxivpro.com/server.crt;
+        ssl_certificate_key /etc/nginx/ssl/ffxivpro.com/server.key;
+
+        root /var/www/ffxivpro.com/public;
+        index index.php;
+
+        server_name www.ffxivpro.com;
+
+        rewrite ^(.*)\.v[0-9]+\.(js|css)$ $1.$2 last;
+
+        location ~* \.(jpg|jpeg|gif|png|css|js|ico|xml)$ {
+                access_log        off;
+                log_not_found     off;
+                expires           360d;
+        }
+
+        location / {
+                # This is cool because no php is touched for static content
+                try_files $uri $uri/ /index.php?$args;
+        }
+
+        location ~ \.php$ {
+                try_files $uri /index.php?$args;
+                fastcgi_index   index.php;
+		fastcgi_pass    127.0.0.1:9000;                
+		#fastcgi_pass    unix:/tmp/php5-fpm.sock;
+                include         fastcgi_params;
+                fastcgi_param   SCRIPT_FILENAME    $document_root$fastcgi_script_name;
+                fastcgi_param   SCRIPT_NAME        $fastcgi_script_name;
+        }
+
+        location ~ /\. {
+                deny all;
+        }
+
+}
+
